@@ -1,0 +1,34 @@
+library(uwot)
+library(stringr)
+library(mia)
+library(scater)
+library(vegan)
+library(ecodist)
+library(reshape2)
+library(dplyr)
+library(DT)
+library(tidyverse)
+library(glue)
+library(curatedMetagenomicData)
+library(ggfortify)
+library(data.table)
+library(phyloseq)
+library(microbiome)
+library(rbiom)
+
+# duplicate S4 object 
+duplicate.data <- oral.data
+
+# insert wavelet file into duplicate S4 object
+W2L <- read.csv("Oral/Wavelets/oral-W2L.csv")
+W2L <- W2L[,-1]
+W2L <- log(1000000*(W2L+(1-min(W2L))))
+duplicate.data@assays@data@listData$relative_abundance <- W2L
+
+# create a phyloseq object
+phyloseq_object <- makePhyloseqFromTreeSummarizedExperiment(duplicate.data, abund_values = "relative_abundance")
+
+tt<-UniFrac(phyloseq_object, weighted = TRUE, normalized = FALSE,
+            parallel = FALSE, fast = TRUE)
+ttm <- as.matrix(tt)
+write.csv(ttm, file = "NUniUW-Oral.csv", row.names = TRUE)
